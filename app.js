@@ -7,6 +7,20 @@ const PORT = 3000;
 app.use(bodyParser.json());
 
 // Ruta de ejemplo
+// app.get("/", (req, res) => {
+//   fs.readFile("linepatrol.json", "utf8", (err, data) => {
+//     if (err) {
+//       console.error(err);
+//       res.status(500).send("Error interno del servidor");
+//       return;
+//     }
+//     // Convierte el contenido del archivo JSON en un objeto JavaScript
+//     const jsonData = JSON.parse(data);
+//     // Envía el objeto JSON como respuesta
+//     res.json(jsonData);
+//   });
+// });
+
 app.get("/", (req, res) => {
   fs.readFile("linepatrol.json", "utf8", (err, data) => {
     if (err) {
@@ -16,16 +30,27 @@ app.get("/", (req, res) => {
     }
     // Convierte el contenido del archivo JSON en un objeto JavaScript
     const jsonData = JSON.parse(data);
-    // Envía el objeto JSON como respuesta
-    res.json(jsonData);
+    
+    // Obtén la fecha especificada en la consulta (si está presente)
+    const fechaConsulta = req.query.fecha;
+    console.log(fechaConsulta)
+    // Si se proporciona una fecha en la consulta, filtra los datos por esa fecha
+    if (fechaConsulta) {
+      const datosFiltrados = jsonData.filter(item => item.fecha === fechaConsulta);
+      res.json(datosFiltrados);
+    } else {
+      // Si no se proporciona una fecha en la consulta, envía todos los datos
+      res.json(jsonData);
+    }
   });
 });
 
-app.post("/guardar", (req, res) => {
-  console.log(req.body);
-  // return res.json(req.body.comentario);
 
+app.post("/guardar", (req, res) => {
+  
   try {
+    req.body.estado = true;
+    req.body.fecha = new Date().toLocaleDateString();
     let newData = req.body; // Datos que se enviarán para agregar al archivo JSON
     delete newData.imagen; // Elimina el atributo 'imagen' del objeto newData
     const existingData = JSON.parse(fs.readFileSync('linepatrol.json')); // Lee el archivo JSON existente
