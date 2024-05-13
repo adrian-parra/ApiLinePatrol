@@ -5,7 +5,7 @@ const app = express();
 const PORT = 3000;
 
 app.use(bodyParser.json());
-
+app.use(express.json())
 // Ruta de ejemplo
 // app.get("/", (req, res) => {
 //   fs.readFile("linepatrol.json", "utf8", (err, data) => {
