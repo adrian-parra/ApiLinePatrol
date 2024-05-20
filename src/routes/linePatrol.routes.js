@@ -20,7 +20,7 @@ router.get('/linePatrol', async (req, res) => {
     }
 
     if (estado) {
-        const estadoBool = estado === "true";
+        const estadoBool = estado === "True";
         whereClause.estado = estadoBool;
     }
     if (fecha_inicio && fecha_fin) {
@@ -33,31 +33,72 @@ router.get('/linePatrol', async (req, res) => {
     const linePatrol = await prisma.line_patrol.findMany({
         where: whereClause,
     });
+
+
+    
+    if (linePatrol.length > 0) {
+        // Formatear la fecha de created_at para cada objeto en el array
+        const formattedData = linePatrol.map(item => {
+            const createdAt = new Date(item.created_at);
+            // createdAt.setDate(createdAt.getDate() + 1);
+            const formattedCreatedAt = createdAt.toLocaleString('es-ES', {
+                year: 'numeric',
+                month: 'long',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                // second: '2-digit',
+                hour12: true,
+                timeZone: 'America/Mazatlan'
+            }).replace(',', '');
+
+            const updatedAt = new Date(item.updated_at);
+            // createdAt.setDate(createdAt.getDate() + 1);
+            const formattedUpdatedAt = updatedAt.toLocaleString('es-ES', {
+                year: 'numeric',
+                month: 'long',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                // second: '2-digit',
+                hour12: true,
+                timeZone: 'America/Mazatlan'
+            }).replace(',', '');
+
+            return {
+                ...item,
+                created_at: formattedCreatedAt,
+                updated_at:formattedUpdatedAt
+            };
+        });
+
+        return res.json(formattedData);
+    } 
     res.json(linePatrol)
 })
 
 router.post('/linePatrol', async (req, res) =>{
-    console.log(req.body)
-    delete req.body.imagen
-    console.log(req.body)
+    try {
+        delete req.body.imagen
     const newLinePatrol = await prisma.line_patrol.create({
         data:req.body,
     })
     res.json(newLinePatrol)
+    } catch (error) {
+        res.status(500).json({error:"Problemas con servidor"})
+    }
+    
 })
 
 router.patch('/linePatrol/:id', async (req, res) => {
     try {
-        console.log(req.body)
         const id = req.params.id
         delete req.body.imagen_after
         delete req.body.id
 
         const payload = req.body
-        console.log(req.body)
 
         payload.estado = false
-        console.log(payload)
         const updateLinePatrol = await prisma.line_patrol.update({
             where: {
               id: Number(id)
