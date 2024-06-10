@@ -1,5 +1,7 @@
 import { Router } from "express";
 import { PrismaClient } from "@prisma/client";
+import { formatDistanceToNow } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -38,39 +40,79 @@ router.get('/linePatrol', async (req, res) => {
     
     if (linePatrol.length > 0) {
         // Formatear la fecha de created_at para cada objeto en el array
-        const formattedData = linePatrol.map(item => {
-            const createdAt = new Date(item.created_at);
-            // createdAt.setDate(createdAt.getDate() + 1);
-            const formattedCreatedAt = createdAt.toLocaleString('es-ES', {
-                year: 'numeric',
-                month: 'long',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit',
-                // second: '2-digit',
-                hour12: true,
-                timeZone: 'America/Mazatlan'
-            }).replace(',', '');
+        // const formattedData = linePatrol.map(item => {
+        //     const createdAt = new Date(item.created_at);
+        //     // createdAt.setDate(createdAt.getDate() + 1);
+        //     const formattedCreatedAt = createdAt.toLocaleString('es-ES', {
+        //         year: 'numeric',
+        //         month: 'long',
+        //         day: '2-digit',
+        //         hour: '2-digit',
+        //         minute: '2-digit',
+        //         // second: '2-digit',
+        //         hour12: true,
+        //         timeZone: 'America/Mazatlan'
+        //     }).replace(',', '');
 
-            const updatedAt = new Date(item.updated_at);
-            // createdAt.setDate(createdAt.getDate() + 1);
-            const formattedUpdatedAt = updatedAt.toLocaleString('es-ES', {
-                year: 'numeric',
-                month: 'long',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit',
-                // second: '2-digit',
-                hour12: true,
-                timeZone: 'America/Mazatlan'
-            }).replace(',', '');
+        //     const updatedAt = new Date(item.updated_at);
+        //     // createdAt.setDate(createdAt.getDate() + 1);
+        //     const formattedUpdatedAt = updatedAt.toLocaleString('es-ES', {
+        //         year: 'numeric',
+        //         month: 'long',
+        //         day: '2-digit',
+        //         hour: '2-digit',
+        //         minute: '2-digit',
+        //         // second: '2-digit',
+        //         hour12: true,
+        //         timeZone: 'America/Mazatlan'
+        //     }).replace(',', '');
 
-            return {
-                ...item,
-                created_at: formattedCreatedAt,
-                updated_at:formattedUpdatedAt
-            };
-        });
+        //     return {
+        //         ...item,
+        //         created_at: formattedCreatedAt,
+        //         updated_at:formattedUpdatedAt
+        //     };
+        // });
+
+        
+            const formattedData = linePatrol.map(item => {
+                const createdAt = new Date(item.created_at);
+                const formattedCreatedAt = formatDistanceToNow(createdAt, { addSuffix: true, locale: es });
+
+                const formattedCreatedAtF = createdAt.toLocaleString('es-ES', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            // second: '2-digit',
+                            hour12: true,
+                            timeZone: 'America/Mazatlan'
+                        }).replace(',', '');
+        
+                const updatedAt = new Date(item.updated_at);
+                const formattedUpdatedAt = formatDistanceToNow(updatedAt, { addSuffix: true, locale: es });
+
+                const formattedUpdatedAtF = updatedAt.toLocaleString('es-ES', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            // second: '2-digit',
+                            hour12: true,
+                            timeZone: 'America/Mazatlan'
+                        }).replace(',', '');
+        
+                return {
+                    ...item,
+                    created_at: formattedCreatedAt,
+                    updated_at: formattedUpdatedAt,
+                    created_at_f: formattedCreatedAtF,
+                    updated_at_f: formattedUpdatedAtF
+                };
+            });
+        
 
         return res.json(formattedData);
     } 
