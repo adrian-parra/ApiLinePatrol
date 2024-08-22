@@ -122,6 +122,8 @@ router.get('/linePatrol', async (req, res) => {
 router.post('/linePatrol', async (req, res) =>{
     try {
         delete req.body.imagen
+
+        console.log(req.body.responsable)
     const newLinePatrol = await prisma.line_patrol.create({
         data:req.body,
     })

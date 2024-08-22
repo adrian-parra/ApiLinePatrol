@@ -22,6 +22,7 @@ model line_patrol {
   comentario      String
   path_imagen_after String?
   persona_libera    String?
+  responsable       String?
   estado         Boolean       @default(true)
   created_at      DateTime      @default(now())
   updated_at      DateTime      @default(now()) @updatedAt
