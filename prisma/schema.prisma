@@ -27,3 +27,8 @@ model line_patrol {
   created_at      DateTime      @default(now())
   updated_at      DateTime      @default(now()) @updatedAt
 }
+
+model Planta {
+  id String @id
+  nombre String
+}

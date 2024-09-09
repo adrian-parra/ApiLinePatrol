@@ -6,6 +6,11 @@ import { es } from 'date-fns/locale';
 const router = Router();
 const prisma = new PrismaClient();
 
+router.get('/LinePatrol/GetPlants', async (req, res) => {
+    const planta = await prisma.planta.findMany();
+    res.json(planta) 
+})
+
 
 router.get('/linePatrol', async (req, res) => {
     const { id_planta, id_linea, id_estacion, estado, fecha_inicio, fecha_fin } = req.query;
