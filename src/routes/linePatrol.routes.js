@@ -145,9 +145,25 @@ router.patch('/linePatrol/:id', async (req, res) => {
         delete req.body.imagen_after
         delete req.body.id
 
+        
+
+        if(req.body.persona_libera === null){
+            delete req.body.persona_libera
+        }
+
+        if(req.body.estado === null){
+            delete req.body.estado
+        }
+
+        if(req.body.path_imagen_after === null){
+            delete req.body.path_imagen_after
+        }
+
         const payload = req.body
 
-        payload.estado = false
+        console.log(payload)
+
+        // payload.estado = false
         const updateLinePatrol = await prisma.line_patrol.update({
             where: {
               id: Number(id)
