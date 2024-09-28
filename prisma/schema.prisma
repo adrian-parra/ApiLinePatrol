@@ -7,11 +7,83 @@
 generator client {
   provider = "prisma-client-js"
 }
-
 datasource db {
   provider = "sqlite"
   url      = env("DATABASE_URL")
 }
+model Planta {
+  id        Int      @id @default(autoincrement())
+  nombre    String
+  estado    Boolean @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  lineas    Linea[]
+}
+
+model Linea {
+  id        Int        @id @default(autoincrement())
+  nombre    String     @unique
+  estado    Boolean    @default(true)
+  idPlanta  Int
+  planta    Planta     @relation(fields: [idPlanta], references: [id])
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  estaciones LineaEstacionEquipo[]
+}
+
+model Estacion {
+  id        Int      @id @default(autoincrement())
+  nombre    String   @unique
+  estado    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  lineas    LineaEstacionEquipo[]
+}
+
+model EquipoComputo {
+  id         Int      @id @default(autoincrement())
+  hostname   String   @unique
+  estado    Boolean @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  lineas    LineaEstacionEquipo[]
+  equiposComputoSoftware EquipoComputoSoftware[]
+}
+
+model LineaEstacionEquipo {
+  idLinea     Int
+  linea       Linea    @relation(fields: [idLinea], references: [id])
+  idEstacion  Int
+  estacion    Estacion @relation(fields: [idEstacion], references: [id])
+  idEquipo    Int
+  equipo      EquipoComputo @relation(fields: [idEquipo], references: [id])
+
+  @@id([idLinea, idEstacion])
+}
+
+model Software{
+  id Int      @id @default(autoincrement())
+  nombre String  @unique
+  estado    Boolean @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  equipoComputo    EquipoComputoSoftware[]
+
+
+}
+
+model EquipoComputoSoftware{
+  idEquipoComputo     Int
+  equipoComputo       EquipoComputo    @relation(fields: [idEquipoComputo], references: [id])
+  idSoftware  Int
+  software    Software @relation(fields: [idSoftware], references: [id])
+  @@id([idEquipoComputo, idSoftware])
+}
+
+
+
+
+
 
 model line_patrol {
   id              Int             @id @default(autoincrement())
@@ -28,7 +100,4 @@ model line_patrol {
   updated_at      DateTime      @default(now()) @updatedAt
 }
 
-model Planta {
-  id String @id
-  nombre String
-}
+
