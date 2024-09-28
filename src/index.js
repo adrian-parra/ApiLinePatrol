@@ -3,6 +3,8 @@ import express from 'express'
 import linePatrolRoutes  from './routes/linePatrol.routes.js'
 import voseoRoutes from './routes/voseo.routes.js'
 import cmdRoutes from './routes/cmd.routes.js'
+import gestionPlantasRoutes from './routes/gestionPlantas.routes.js'
+
 
 const app = express()
 
@@ -10,6 +12,7 @@ const app = express()
 
 app.use(express.json())
 
+app.use("/api", gestionPlantasRoutes)
 app.use("/api", linePatrolRoutes)
 app.use("/api", voseoRoutes)
 app.use("/api", cmdRoutes)
