@@ -59,6 +59,7 @@ model LineaEstacionEquipo {
   equipo      EquipoComputo @relation(fields: [idEquipo], references: [id])
 
   @@id([idLinea, idEstacion])
+  @@unique([idEquipo])
 }
 
 model Software{
