@@ -58,7 +58,7 @@ model LineaEstacionEquipo {
   idEquipo    Int
   equipo      EquipoComputo @relation(fields: [idEquipo], references: [id])
 
-  @@id([idLinea, idEstacion])
+  @@id([idLinea, idEstacion, idEquipo])
   @@unique([idEquipo])
 }
 

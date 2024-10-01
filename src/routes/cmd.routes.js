@@ -145,6 +145,28 @@ router.get('/cmd/user', async (req, res) => {
 })
 
 
+router.post("/cmd/testConection", async (req, res) => {
+  const ip = req.body.ip;
+
+  exec(`ping -n 1 ${ip}`, (error, stdout, stderr) => {
+    if (error) {
+      console.error(`Error al hacer ping a ${ip}: ${error.message}`);
+      return res.json({ 'estatus': 'error' });
+    }
+    if (stderr) {
+      console.error(`Error al hacer ping a ${ip}: ${stderr}`);
+      return res.json({ 'estatus': 'error' });
+    }
+    if (stdout.includes("Destination host unreachable")) {
+      console.log(`Ping fallido a ${ip}`);
+      return res.json({ 'estatus': 'error' });
+    }
+    console.log(`Ping exitoso a ${ip}`);
+    return res.json({ 'estatus': 'ok' });
+  });
+
+})
+
 
 router.post('/cmd/ping', async (req, res) => {
   let hosts = ['C7TIME104', 'C7TIME105', 'C7TIME203', 'C7TIME204', 'C7TIME306', 'C7TIME307']; // Lista de IPs a verificar
