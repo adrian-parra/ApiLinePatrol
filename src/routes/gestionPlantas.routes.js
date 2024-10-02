@@ -113,4 +113,43 @@ router.delete('/gestion/planta/equipoComputo/:id', async (req, res) => {
 });
 
 
+
+
+// Endpoint para registrar la relación entre EquipoComputo y Software
+router.post('/gestion/planta/equipoComputo/add/software', async (req, res) => {
+  const { idEquipoComputo, idSoftware } = req.body;
+
+  try {
+    // Inserción de los datos en la tabla EquipoComputoSoftware
+    const equipoComputoSoftware = await prisma.equipoComputoSoftware.create({
+      data: {
+        idEquipoComputo: Number(idEquipoComputo),
+        idSoftware: Number(idSoftware)  
+      }
+    });
+    
+    res.status(201).json(equipoComputoSoftware);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Ocurrió un error al registrar la relación.' });
+  }
+});
+
+
+router.get('/gestion/planta/software', async (req, res) => {
+  try {
+    const softwareList = await prisma.software.findMany({
+      include: {
+        equipoComputo: true  // Incluir la relación con EquipoComputoSoftware
+      }
+    });
+    
+    res.status(200).json(softwareList);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Ocurrió un error al obtener los registros de software.' });
+  }
+});
+
+
 export default router;
