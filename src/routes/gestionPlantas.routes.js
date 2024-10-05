@@ -152,4 +152,150 @@ router.get('/gestion/planta/software', async (req, res) => {
 });
 
 
+// Endpoint para registrar un nuevo LineaEstacionEquipo
+router.post('/gestion/planta/equipoComputo/add/estacionUbicacion', async (req, res) => {
+  const { idLinea, idEstacion, idEquipo } = req.body;
+
+  try {
+      // Crear un nuevo registro en la base de datos
+      const nuevoRegistro = await prisma.lineaEstacionEquipo.create({
+          data: {
+              idLinea: Number(idLinea),
+              idEstacion: Number(idEstacion),
+              idEquipo: Number(idEquipo),
+          },
+      });
+
+      return res.status(201).json(nuevoRegistro);
+  } catch (error) {
+      console.error(error);
+      return res.status(500).json({
+          success: false,
+          message: 'Error al crear el registro',
+          error: error.message,
+      });
+  }
+});
+
+
+
+router.get('/gestion/planta/equipoComputo/estaciones', async (req, res) => {
+  try {
+      const estaciones = await prisma.estacion.findMany({
+          include: {
+              lineas: true, // Incluye las relaciones con LineaEstacionEquipo si es necesario
+          },
+      });
+
+      return res.status(200).json(estaciones);
+  } catch (error) {
+      console.error(error);
+      return res.status(500).json({
+          success: false,
+          message: 'Error al obtener las estaciones',
+          error: error.message,
+      });
+  }
+});
+
+router.get('/gestion/planta/equipoComputo/lineas', async (req, res) => {
+  try {
+      const lineas = await prisma.linea.findMany({
+          include: {
+              estaciones: true, // Incluye las relaciones con LineaEstacionEquipo si es necesario
+          },
+      });
+
+      return res.status(200).json(lineas);
+  } catch (error) {
+      console.error(error);
+      return res.status(500).json({
+          success: false,
+          message: 'Error al obtener las líneas',
+          error: error.message,
+      });
+  }
+});
+
+router.get('/gestion/planta/equipoComputo/plantas', async (req, res) => {
+  try {
+      const plantas = await prisma.planta.findMany();
+      return res.status(200).json(plantas);
+  } catch (error) {
+      console.error(error);
+      return res.status(500).json({
+          success: false,
+          message: 'Error al obtener las plantas.',
+          error: error.message,
+      });
+  }
+});
+
+// Endpoint para registrar una nueva Planta
+
+
+router.post('/gestion/planta/equipoComputo/plantas', async (req, res) => {
+  const { nombre, estado } = req.body;
+
+  if (!nombre) {
+      return res.status(400).json({ success: false, message: "El nombre de la planta es requerido." });
+  }
+
+  try {
+      const nuevaPlanta = await prisma.planta.create({
+          data: {
+              nombre,
+              estado: estado !== undefined ? estado : true, // Valor por defecto
+          },
+      });
+      return res.status(201).json({ success: true, data: nuevaPlanta });
+  } catch (error) {
+      return res.status(500).json({ success: false, message: "Error al registrar la planta.", error: error.message });
+  }
+});
+
+// Endpoint para registrar una nueva Linea
+router.post('/gestion/planta/equipoComputo/lineas', async (req, res) => {
+  const { nombre, idPlanta, estado } = req.body;
+
+  if (!nombre || !idPlanta) {
+      return res.status(400).json({ success: false, message: "El nombre de la línea y el ID de la planta son requeridos." });
+  }
+
+  try {
+      const nuevaLinea = await prisma.linea.create({
+          data: {
+              nombre,
+              idPlanta,
+              estado: estado !== undefined ? estado : true, // Valor por defecto
+          },
+      });
+      return res.status(201).json({ success: true, data: nuevaLinea });
+  } catch (error) {
+      return res.status(500).json({ success: false, message: "Error al registrar la línea.", error: error.message });
+  }
+});
+
+// Endpoint para registrar una nueva Estacion
+router.post('/gestion/planta/equipoComputo/estaciones', async (req, res) => {
+  const { nombre, estado } = req.body;
+
+  if (!nombre) {
+      return res.status(400).json({ success: false, message: "El nombre de la estación es requerido." });
+  }
+
+  try {
+      const nuevaEstacion = await prisma.estacion.create({
+          data: {
+              nombre,
+              estado: estado !== undefined ? estado : true, // Valor por defecto
+          },
+      });
+      return res.status(201).json({ success: true, data: nuevaEstacion });
+  } catch (error) {
+      return res.status(500).json({ success: false, message: "Error al registrar la estación.", error: error.message });
+  }
+});
+
+
 export default router;
