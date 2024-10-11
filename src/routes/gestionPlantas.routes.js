@@ -21,7 +21,16 @@ router.get('/gestion/planta/equipoComputo/', async (req, res) => {
 
 
     // Construir el objeto where para el filtrado
-    const whereClause = idPlanta ? { lineas: { some: { linea: { idPlanta: parseInt(idPlanta) } } } } : {};
+    // const whereClause = idPlanta ? { lineas: { some: { linea: { idPlanta: parseInt(idPlanta) } } } } : {};
+    const whereClause = {
+      OR: [
+        { lineas: { some: { linea: { idPlanta: parseInt(idPlanta) } } } },
+        { lineas: { none: {} } } // Esto incluye equipos que no tienen líneas
+      ]
+    };
+    
+
+
 
     const equipos = await prisma.equipoComputo.findMany({
       where: whereClause, // Aplicar el filtro por planta si se proporciona idPlanta
@@ -148,6 +157,26 @@ router.get('/gestion/planta/software', async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Ocurrió un error al obtener los registros de software.' });
+  }
+});
+
+router.post('/gestion/planta/software', async (req, res) => {
+  const { nombre, estado } = req.body;
+
+  if (!nombre) {
+      return res.status(400).json({ success: false, message: "El nombre del software es requerido." });
+  }
+
+  try {
+      const nuevoSoftware = await prisma.software.create({
+          data: {
+              nombre,
+              estado: estado !== undefined ? estado : true, // Valor por defecto
+          },
+      });
+      return res.status(201).json({ success: true, data: nuevoSoftware });
+  } catch (error) {
+      return res.status(500).json({ success: false, message: "Error al registrar el software.", error: error.message });
   }
 });
 
