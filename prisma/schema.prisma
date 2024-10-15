@@ -18,6 +18,8 @@ model Planta {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   lineas    Linea[]
+
+  reporteGenerador reporteGenerador[]
 }
 
 model Linea {
@@ -99,6 +101,22 @@ model line_patrol {
   estado         Boolean       @default(true)
   created_at      DateTime      @default(now())
   updated_at      DateTime      @default(now()) @updatedAt
+}
+
+model reporteGenerador {
+  id  Int @id @default(autoincrement())
+  idPlanta  Int
+  responsable String
+  path_imagen_horas_trabajadas String
+  path_imagen_status_bateria String
+  path_imagen_nivel_anticongelante String
+  path_imagen_nivel_diesel String
+  path_imagen_nivel_aceite String
+  comentario String?
+  estado         Boolean       @default(true)
+  created_at      DateTime      @default(now())
+  updated_at      DateTime      @default(now()) @updatedAt
+  planta    Planta     @relation(fields: [idPlanta], references: [id])
 }
 
 
