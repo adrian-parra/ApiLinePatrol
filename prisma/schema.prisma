@@ -50,6 +50,8 @@ model EquipoComputo {
   updatedAt DateTime @updatedAt
   lineas    LineaEstacionEquipo[]
   equiposComputoSoftware EquipoComputoSoftware[]
+  equipoComputoImpresora EquipoComputoImpresora[]
+  soportes    Soporte[] // Relación con Soporte
 }
 
 model LineaEstacionEquipo {
@@ -75,12 +77,31 @@ model Software{
 
 }
 
+model Impresora {
+  id          Int      @id @default(autoincrement())
+  nombre      String   @unique
+  modelo      String?
+  estado      Boolean  @default(true)
+  hostname    String?  // Opcional, si tienen hostname
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  equipoComputo EquipoComputoImpresora[]
+}
+
 model EquipoComputoSoftware{
   idEquipoComputo     Int
   equipoComputo       EquipoComputo    @relation(fields: [idEquipoComputo], references: [id])
   idSoftware  Int
   software    Software @relation(fields: [idSoftware], references: [id])
   @@id([idEquipoComputo, idSoftware])
+}
+
+model EquipoComputoImpresora{
+  idEquipoComputo   Int
+  equipoComputo       EquipoComputo    @relation(fields: [idEquipoComputo], references: [id])
+  idImpresora   Int
+  impresora    Impresora @relation(fields: [idImpresora], references: [id])
+  @@id([idEquipoComputo, idImpresora])
 }
 
 
@@ -119,4 +140,21 @@ model reporteGenerador {
   planta    Planta     @relation(fields: [idPlanta], references: [id])
 }
 
+model Soporte {
+  id             Int       @id @default(autoincrement())
+  descripcion    String    // Descripción del problema
+  solucion       String?   // Solución aplicada (opcional)
+  fecha          DateTime  @default(now()) // Fecha del soporte
+  responsable    String    // Persona encargada del soporte
+  estado         String    // Estado del soporte (e.g., "Pendiente", "En Proceso", "Resuelto")
+  habilitado     Boolean   @default(true)  // Indica si el registro está habilitado o inhabilitado
+  
+  idEquipoComputo   Int
+  
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  equipoComputo  EquipoComputo? @relation(fields: [idEquipoComputo], references: [id])
+
+}
 
