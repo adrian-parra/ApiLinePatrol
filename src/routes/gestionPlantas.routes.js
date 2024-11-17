@@ -45,6 +45,12 @@ router.get("/gestion/planta/equipoComputo/", async (req, res) => {
             software: true,
           },
         },
+        soportes: true,
+        equipoComputoImpresora: {
+          include: {
+            impresora: true,
+          },
+        }
       },
     });
 
@@ -555,33 +561,5 @@ router.patch('/gestion/planta/equipoComputo/soporte/:id', async (req, res) => {
   }
 });
 
-router.get('/gestion/planta/equipoComputo/soporte/pendiente',async (req, res) => {
-  try {
-
-    const soportesPendientes = await prisma.soporte.findMany({
-      where: {
-        estado: 'Pendiente',
-      },
-      include: {
-        equipoComputo: {
-          include: {
-            lineas: {
-              include: {
-                linea: true,
-                estacion: true,
-              },
-            },
-          },
-        },
-      },
-    });
-
-    res.json(soportesPendientes);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Error al obtener los soportes pendientes' });
-  }
-
-})
 
 export default router;
