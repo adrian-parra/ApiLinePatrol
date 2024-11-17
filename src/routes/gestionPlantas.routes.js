@@ -446,6 +446,43 @@ router.post("/gestion/planta/equipoComputo/soporte", async (req, res) => {
 
 router.get("/gestion/planta/equipoComputo/soporte/hoy", async (req, res) => {
   try {
+
+    // Obtener la fecha actual
+    const fechaActual = new Date();
+
+    // Buscar y actualizar soportes pendientes o en proceso con fecha anterior a la actual
+    const soportesPendientes = await prisma.soporte.findMany({
+      where: {
+        OR: [
+          { estado: 'Pendiente' },
+          { estado: 'En proceso' }
+        ],
+        fecha: {
+          lt: fechaActual, // Filtrar por fecha anterior a la actual
+        },
+      },
+      include: {
+        equipoComputo: {
+          include: {
+            lineas: {
+              include: {
+                linea: true,
+                estacion: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // Actualizar la fecha de cada soporte encontrado
+    await Promise.all(soportesPendientes.map(async (soporte) => {
+      await prisma.soporte.update({
+        where: { id: soporte.id },
+        data: { fecha: fechaActual },
+      });
+    }));
+
     // Obtener el inicio del día actual
     const inicioDelDia = new Date();
     inicioDelDia.setHours(0, 0, 0, 0);
@@ -517,5 +554,34 @@ router.patch('/gestion/planta/equipoComputo/soporte/:id', async (req, res) => {
     res.status(500).json({ error: 'Error al actualizar el soporte' });
   }
 });
+
+router.get('/gestion/planta/equipoComputo/soporte/pendiente',async (req, res) => {
+  try {
+
+    const soportesPendientes = await prisma.soporte.findMany({
+      where: {
+        estado: 'Pendiente',
+      },
+      include: {
+        equipoComputo: {
+          include: {
+            lineas: {
+              include: {
+                linea: true,
+                estacion: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    res.json(soportesPendientes);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Error al obtener los soportes pendientes' });
+  }
+
+})
 
 export default router;
