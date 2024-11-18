@@ -158,3 +158,10 @@ model Soporte {
 
 }
 
+model File {
+  id        Int      @id @default(autoincrement())
+  fileName  String
+  filePath  String
+  createdAt DateTime @default(now())
+}
+

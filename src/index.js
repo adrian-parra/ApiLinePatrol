@@ -5,6 +5,8 @@ import voseoRoutes from './routes/voseo.routes.js'
 import cmdRoutes from './routes/cmd.routes.js'
 import gestionPlantasRoutes from './routes/gestionPlantas.routes.js'
 import reporteGenerador from './routes/reporteGenerador.routes.js'
+import fileUploadRoutes from './routes/file.routes.js'
+
 
 
 
@@ -19,6 +21,7 @@ app.use("/api", linePatrolRoutes)
 app.use("/api", voseoRoutes)
 app.use("/api", cmdRoutes)
 app.use("/api", reporteGenerador)
+app.use("/api", fileUploadRoutes)
 
 
 app.listen(3000)
