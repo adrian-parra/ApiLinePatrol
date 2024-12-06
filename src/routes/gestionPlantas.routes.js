@@ -561,5 +561,212 @@ router.patch('/gestion/planta/equipoComputo/soporte/:id', async (req, res) => {
   }
 });
 
+router.get('/gestion/planta/soportes/estadisticas/semana', async (req, res) => {
+  try {
+    const { mes } = req.query; // Formato esperado: "YYYY-MM"
+    console.log(mes)
+    const fechaInicio = mes
+      ? `${mes}-01T00:00:00.000Z` // Primer día del mes proporcionado
+      : new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString(); // Primer día del mes actual
+
+      console.log(fechaInicio)
+    const fechaFin = mes
+      ? new Date(new Date(`${mes}-01`).getFullYear(), new Date(`${mes}-01`).getMonth() + 2, 0).toISOString().replace('T00:00:00.000Z', 'T23:59:59.999Z') // Último día del mes proporcionado
+      : new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString().replace('T00:00:00.000Z', 'T23:59:59.999Z'); // Último día del mes actual
+
+      console.log(fechaFin)
+       // Obtener los datos filtrados por mes
+       const soportes = await prisma.soporte.findMany({
+        where: {
+          fecha: {
+            gte: fechaInicio,
+            lte: fechaFin,
+          },
+        },
+      });
+  
+      // Agrupar los datos por semana
+      const soportesPorSemana = {};
+  
+      soportes.forEach(suporte => {
+        const fecha = new Date(suporte.fecha);
+        const año = fecha.getFullYear();
+        const semana = getISOWeek(fecha); // Función para obtener el número de semana ISO
+  
+        const key = `${año}-${semana}`;
+        if (!soportesPorSemana[key]) {
+          soportesPorSemana[key] = 0;
+        }
+        soportesPorSemana[key]++;
+      });
+  
+      // Convertir el objeto a un array
+      const result = Object.entries(soportesPorSemana).map(([semana, total]) => ({
+        semana,
+        total,
+      }));
+  
+      res.json(result);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Error al obtener soportes por semana: ' + error.message });
+  }
+});
+
+// Función para obtener el número de semana ISO
+function getISOWeek(date) {
+  const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
+  const days = Math.floor((date - firstDayOfYear) / (24 * 60 * 60 * 1000));
+  return Math.ceil((days + firstDayOfYear.getDay() + 1) / 7);
+}
+
+router.get('/gestion/planta/soportes/estadisticas/estacion', async (req, res) => {
+  try {
+    const { mes } = req.query; // Formato esperado: "YYYY-MM"
+    
+    // Definir el primer y último día del mes
+    const fechaInicio = mes ? new Date(`${mes}-01T00:00:00.000Z`) : new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+    const fechaFin = mes ? new Date(new Date(`${mes}-01T00:00:00.000Z`).getFullYear(), new Date(`${mes}-01T00:00:00.000Z`).getMonth() + 2, 0) : new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);
+
+    // Obtener los datos agrupados por idEquipoComputo
+    const soportesPorEquipo = await prisma.soporte.groupBy({
+      by: ['idEquipoComputo'], // Agrupar por el ID del equipo de cómputo
+      where: {
+        fecha: {
+          gte: fechaInicio,
+          lte: fechaFin,
+        },
+      },
+      _count: {
+        _all: true, // Contar todos los registros
+      },
+    });
+
+    // Obtener los IDs de los equipos de cómputo
+    const equipoIds = soportesPorEquipo.map(s => s.idEquipoComputo);
+
+    // Obtener los equipos de cómputo y sus estaciones
+    const equipos = await prisma.equipoComputo.findMany({
+      where: {
+        id: { in: equipoIds },
+      },
+      include: {
+        lineas: {
+          include: {
+            estacion: true, // Incluir la estación relacionada
+          },
+        },
+      },
+    });
+
+    // Contar los soportes por estación
+    const conteoPorEstacion = {};
+
+    soportesPorEquipo.forEach(soporte => {
+      const equipo = equipos.find(e => e.id === soporte.idEquipoComputo);
+      if (equipo && equipo.lineas.length > 0) {
+        const estacion = equipo.lineas[0].estacion.nombre; // Obtener el nombre de la estación
+        if (!conteoPorEstacion[estacion]) {
+          conteoPorEstacion[estacion] = 0;
+        }
+        conteoPorEstacion[estacion] += soporte._count._all; // Sumar el conteo
+      }
+    });
+
+    // Encontrar la estación con más soportes
+    const maxEstacion = Object.entries(conteoPorEstacion).reduce((prev, current) => {
+      return (prev[1] > current[1]) ? prev : current;
+    });
+
+    res.json({
+      estacion: maxEstacion[0],
+      total: maxEstacion[1],
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Error al obtener la estación con más soportes: ' + error.message });
+  }
+});
+
+router.get('/gestion/planta/soportes/estadisticas/top-estaciones', async (req, res) => {
+  try {
+    const { mes } = req.query; // Formato esperado: "YYYY-MM"
+    
+    // Definir el primer y último día del mes
+    const fechaInicio = mes ? new Date(`${mes}-01T00:00:00.000Z`) : new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+    const fechaFin = mes ? new Date(new Date(`${mes}-01T00:00:00.000Z`).getFullYear(), new Date(`${mes}-01T00:00:00.000Z`).getMonth() + 2, 0) : new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);
+
+    // Obtener los datos agrupados por idEquipoComputo
+    const soportesPorEquipo = await prisma.soporte.groupBy({
+      by: ['idEquipoComputo'], // Agrupar por el ID del equipo de cómputo
+      where: {
+        fecha: {
+          gte: fechaInicio,
+          lte: fechaFin,
+        },
+      },
+      _count: {
+        _all: true, // Contar todos los registros
+      },
+    });
+
+   
+
+    // Obtener los IDs de los equipos de cómputo
+    const equipoIds = soportesPorEquipo.map(s => s.idEquipoComputo);
+
+    console.log(equipoIds)
+
+   // Obtener los equipos de cómputo y sus estaciones y líneas
+   const equipos = await prisma.equipoComputo.findMany({
+    where: {
+      id: { in: equipoIds },
+    },
+    include: {
+      lineas: {
+        include: {
+          estacion: true,
+          linea:true
+        },
+          },
+        },
+  });
+
+
+   // Contar los soportes por estación
+   const conteoPorEstacion = {};
+   let claveIncremental = 1; // Inicializar el contador
+
+   soportesPorEquipo.forEach(soporte => {
+     const equipo = equipos.find(e => e.id === soporte.idEquipoComputo);
+     if (equipo && equipo.lineas.length > 0) {
+       const estacion = equipo.lineas[0].estacion.nombre; // Obtener el nombre de la estación
+       const linea = equipo.lineas[0].linea.nombre; // Obtener el nombre de la línea
+
+         // Crear una clave única incrementable
+         const clave = `clave-${claveIncremental++}`; // Incrementar la clave
+
+       if (!conteoPorEstacion[clave]) {
+         //conteoPorEstacion[estacion] = { total: 0, linea }; // Inicializar con el nombre de la línea
+         conteoPorEstacion[clave] = { total: 0, estacion, linea }; // Inicializar con el nombre de la línea
+       }
+       conteoPorEstacion[clave].total += soporte._count._all; // Sumar el conteo
+     }
+   });
+
+   console.log(conteoPorEstacion)
+
+ // Convertir el objeto a un array y ordenar por total de soportes
+const estacionesOrdenadas = Object.entries(conteoPorEstacion)
+.map(([clave, { total, estacion, linea }]) => ({ clave, total, estacion, linea })) // Incluir el nombre de la línea
+.sort((a, b) => b.total - a.total) // Ordenar de mayor a menor
+.slice(0, 10); // Limitar a las 10 primeras
+
+res.json(estacionesOrdenadas);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Error al obtener el top 10 de estaciones con más soportes: ' + error.message });
+  }
+});
 
 export default router;
