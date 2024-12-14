@@ -604,7 +604,8 @@ router.get('/gestion/planta/soportes/estadisticas/semana', async (req, res) => {
       const result = Object.entries(soportesPorSemana).map(([semana, total]) => ({
         semana,
         total,
-      }));
+      })).sort((a, b) => b.total - a.total);
+
   
       res.json(result);
   } catch (error) {
