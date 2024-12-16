@@ -161,7 +161,8 @@ model Soporte {
 model File {
   id        Int      @id @default(autoincrement())
   fileName  String
-  filePath  String
+  filePath  String @unique
   createdAt DateTime @default(now())
+  isProtected Boolean   @default(false)
 }
 
