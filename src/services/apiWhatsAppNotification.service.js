@@ -17,7 +17,7 @@ export const notifyFileChange = async ({userName, fileName, action, performedBy}
         to: RECIPIENT_PHONE,
         type: "template",
         template: {
-          name: "file_notification",
+          name: "file_change_notification",
           language: { code: "es_MX" },
           components: [
             {
@@ -44,6 +44,7 @@ export const notifyFileChange = async ({userName, fileName, action, performedBy}
         });
     
         if (!response.ok) {
+          console.log(response)
           throw new Error("Error al enviar la notificación");
         }
     
