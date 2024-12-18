@@ -15,6 +15,10 @@ router.get('/files', async (req, res) => {
   
   // Endpoint para registrar un archivo
 router.post('/files', async (req, res) => {
+
+   // Obtener el encabezado personalizado
+   const customHostHeader = req.headers['x-custom-host'];
+
     const { fileName, filePath } = req.body;
     if (!fileName || !filePath) {
       return res.status(400).send('Faltan datos');
@@ -25,12 +29,16 @@ router.post('/files', async (req, res) => {
     });
 
     // NOTIFICAR POR WHATSAPP
-    await notifyFileChange({userName:"Adrian", fileName, action:"subido", performedBy:req.connection.remoteAddress})
+    await notifyFileChange({userName:"Adrian", fileName, action:"subido", performedBy:customHostHeader})
   
     res.json(newFile);
   });
 
 router.put('/files', async (req, res) => {
+
+   // Obtener el encabezado personalizado
+   const customHostHeader = req.headers['x-custom-host'];
+
     const { filePath } = req.body;
     if (!filePath) {
       return res.status(400).send('Faltan datos');
@@ -56,7 +64,8 @@ router.put('/files', async (req, res) => {
       });
 
       // NOTIFICAR POR WHATSAPP
-    await notifyFileChange({userName:"Adrian", fileName:file.fileName, action:"eliminado", performedBy:req.connection.remoteAddress})
+    await notifyFileChange({userName:"Adrian", fileName:file.fileName, action:"🗑️ eliminado", performedBy:customHostHeader})
+
   
       res.json(fileDeleted);
     } catch (error) {
