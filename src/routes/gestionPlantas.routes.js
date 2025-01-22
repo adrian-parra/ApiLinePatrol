@@ -427,7 +427,7 @@ router.post("/gestion/planta/equipoComputo/add/impresora", async (req, res) => {
 });
 
 router.post("/gestion/planta/equipoComputo/soporte", async (req, res) => {
-  const { descripcion, solucion, responsable, estado, idEquipoComputo } =
+  const { descripcion, solucion, responsable,requeridoPor, estado, idEquipoComputo } =
     req.body;
 
   try {
@@ -437,6 +437,7 @@ router.post("/gestion/planta/equipoComputo/soporte", async (req, res) => {
         descripcion,
         solucion,
         responsable,
+        requeridoPor,
         estado,
         idEquipoComputo: parseInt(idEquipoComputo),
       },
@@ -450,6 +451,76 @@ router.post("/gestion/planta/equipoComputo/soporte", async (req, res) => {
   }
 });
 
+
+router.get("/gestion/planta/equipoComputo/soporte/dia", async (req, res) => {
+  let { fecha_inicio, fecha_fin } = req.query;
+
+  try {
+
+    // Verificar que se haya proporcionado la fecha de inicio
+    if (!fecha_inicio) {
+      return res.status(400).json({ error: "Debe proporcionar la fecha de inicio" });
+    }
+
+    // Verificar que se haya proporcionado la fecha de fin
+    if (!fecha_fin) {
+      return res.status(400).json({ error: "Debe proporcionar la fecha de fin" });
+    }
+
+
+    console.log(fecha_inicio, fecha_fin)
+    fecha_fin = fecha_fin + "T00:00:00.853Z"
+    fecha_inicio = fecha_inicio + "T00:00:00.853Z"
+
+    // Obtener la fecha de inicio y fin
+    const fechaInicio = new Date(fecha_inicio);
+    const fechaFin = new Date(fecha_fin);
+
+    // Consulta para obtener soportes con la fecha actual
+
+    const soportesHoy = await prisma.soporte.findMany({
+      where: {
+        fecha: {
+          gte: fechaInicio, // Soportes desde el inicio del día
+          lt: fechaFin, // Hasta el final del día
+        },
+      },
+      include: {
+        equipoComputo: {
+          include: {
+            lineas: {
+              include: {
+                linea: {
+                  include: {
+                    planta: true,
+                  },
+                },
+                estacion: true,
+              },
+            },
+            equiposComputoSoftware: {
+              include: {
+                software: true,
+              },
+            },
+            equipoComputoImpresora: {
+              include: {
+                impresora: true,
+              },
+            }
+          },
+        },
+      },
+    });
+
+    return res.status(200).json(soportesHoy);
+  } catch (error) {
+    console.error(error);
+    return res
+      .status(500)
+      .json({ error: "Error al obtener los soportes de hoy" });
+  }
+});
 router.get("/gestion/planta/equipoComputo/soporte/hoy", async (req, res) => {
   try {
 
