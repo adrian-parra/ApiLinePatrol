@@ -451,6 +451,15 @@ router.post("/gestion/planta/equipoComputo/soporte", async (req, res) => {
   }
 });
 
+function convertirAUTC(fechaLocal) {
+  // Crear un objeto Date con la fecha local
+  const fecha = new Date(fechaLocal);
+  // Ajustar manualmente para Sinaloa (UTC-7)
+  const fechaUTC = new Date(fecha.getTime() + (7 * 60 * 60 * 1000));
+
+  return fechaUTC.toISOString();
+}
+
 
 router.get("/gestion/planta/equipoComputo/soporte/dia", async (req, res) => {
   let { fecha_inicio, fecha_fin } = req.query;
@@ -468,16 +477,11 @@ router.get("/gestion/planta/equipoComputo/soporte/dia", async (req, res) => {
     }
 
 
-    console.log(fecha_inicio, fecha_fin)
-    fecha_fin = fecha_fin + "T00:00:00.853Z"
-    fecha_inicio = fecha_inicio + "T00:00:00.853Z"
-
     // Obtener la fecha de inicio y fin
-    const fechaInicio = new Date(fecha_inicio);
-    const fechaFin = new Date(fecha_fin);
+    const fechaInicio = convertirAUTC(fecha_inicio);
+    const fechaFin = convertirAUTC(fecha_fin);
 
     // Consulta para obtener soportes con la fecha actual
-
     const soportesHoy = await prisma.soporte.findMany({
       where: {
         fecha: {
