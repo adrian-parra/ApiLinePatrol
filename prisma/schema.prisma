@@ -1,44 +1,39 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
+
 datasource db {
   provider = "sqlite"
   url      = env("DATABASE_URL")
 }
-model Planta {
-  id        Int      @id @default(autoincrement())
-  nombre    String
-  estado    Boolean @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  lineas    Linea[]
 
+model Planta {
+  id               Int                @id @default(autoincrement())
+  nombre           String
+  estado           Boolean            @default(true)
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  lineas           Linea[]
   reporteGenerador reporteGenerador[]
 }
 
 model Linea {
-  id        Int        @id @default(autoincrement())
-  nombre    String     @unique
-  estado    Boolean    @default(true)
-  idPlanta  Int
-  planta    Planta     @relation(fields: [idPlanta], references: [id])
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+  id         Int                   @id @default(autoincrement())
+  nombre     String                @unique
+  estado     Boolean               @default(true)
+  idPlanta   Int
+  createdAt  DateTime              @default(now())
+  updatedAt  DateTime              @updatedAt
+  planta     Planta                @relation(fields: [idPlanta], references: [id])
   estaciones LineaEstacionEquipo[]
 }
 
 model Estacion {
-  id        Int      @id @default(autoincrement())
-  nombre    String   @unique
-  estado    Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id        Int                   @id @default(autoincrement())
+  nombre    String                @unique
+  estado    Boolean               @default(true)
+  createdAt DateTime              @default(now())
+  updatedAt DateTime              @updatedAt
   lineas    LineaEstacionEquipo[]
 }
 
@@ -66,103 +61,94 @@ model LineaEstacionEquipo {
   @@unique([idEquipo])
 }
 
-model Software{
-  id Int      @id @default(autoincrement())
-  nombre String  @unique
-  estado    Boolean @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  equipoComputo    EquipoComputoSoftware[]
-
-
+model Software {
+  id            Int                     @id @default(autoincrement())
+  nombre        String                  @unique
+  estado        Boolean                 @default(true)
+  createdAt     DateTime                @default(now())
+  updatedAt     DateTime                @updatedAt
+  equipoComputo EquipoComputoSoftware[]
 }
 
 model Impresora {
-  id          Int      @id @default(autoincrement())
-  nombre      String   @unique
-  modelo      String?
-  estado      Boolean  @default(true)
-  hostname    String?  // Opcional, si tienen hostname
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id            Int                      @id @default(autoincrement())
+  nombre        String                   @unique
+  modelo        String?
+  estado        Boolean                  @default(true)
+  hostname      String?
+  createdAt     DateTime                 @default(now())
+  updatedAt     DateTime                 @updatedAt
   equipoComputo EquipoComputoImpresora[]
 }
 
-model EquipoComputoSoftware{
-  idEquipoComputo     Int
-  equipoComputo       EquipoComputo    @relation(fields: [idEquipoComputo], references: [id])
-  idSoftware  Int
-  software    Software @relation(fields: [idSoftware], references: [id])
+model EquipoComputoSoftware {
+  idEquipoComputo Int
+  idSoftware      Int
+  software        Software      @relation(fields: [idSoftware], references: [id])
+  equipoComputo   EquipoComputo @relation(fields: [idEquipoComputo], references: [id])
+
   @@id([idEquipoComputo, idSoftware])
 }
 
-model EquipoComputoImpresora{
-  idEquipoComputo   Int
-  equipoComputo       EquipoComputo    @relation(fields: [idEquipoComputo], references: [id])
-  idImpresora   Int
-  impresora    Impresora @relation(fields: [idImpresora], references: [id])
+model EquipoComputoImpresora {
+  idEquipoComputo Int
+  idImpresora     Int
+  impresora       Impresora     @relation(fields: [idImpresora], references: [id])
+  equipoComputo   EquipoComputo @relation(fields: [idEquipoComputo], references: [id])
+
   @@id([idEquipoComputo, idImpresora])
 }
 
-
-
-
-
-
 model line_patrol {
-  id              Int             @id @default(autoincrement())
-  id_planta       String
-  id_linea        String
-  id_estacion     String
-  path_imagen     String
-  comentario      String
+  id                Int      @id @default(autoincrement())
+  id_planta         String
+  id_linea          String
+  id_estacion       String
+  path_imagen       String
+  comentario        String
   path_imagen_after String?
   persona_libera    String?
+  estado            Boolean  @default(true)
+  created_at        DateTime @default(now())
+  updated_at        DateTime @default(now()) @updatedAt
   responsable       String?
-  estado         Boolean       @default(true)
-  created_at      DateTime      @default(now())
-  updated_at      DateTime      @default(now()) @updatedAt
 }
 
 model reporteGenerador {
-  id  Int @id @default(autoincrement())
-  idPlanta  Int
-  responsable String
-  path_imagen_horas_trabajadas String
-  path_imagen_status_bateria String
+  id                               Int      @id @default(autoincrement())
+  idPlanta                         Int
+  responsable                      String
+  path_imagen_horas_trabajadas     String
+  path_imagen_status_bateria       String
   path_imagen_nivel_anticongelante String
-  path_imagen_nivel_diesel String
-  path_imagen_nivel_aceite String
-  comentario String?
-  estado         Boolean       @default(true)
-  created_at      DateTime      @default(now())
-  updated_at      DateTime      @default(now()) @updatedAt
-  planta    Planta     @relation(fields: [idPlanta], references: [id])
+  path_imagen_nivel_diesel         String
+  path_imagen_nivel_aceite         String
+  comentario                       String?
+  estado                           Boolean  @default(true)
+  created_at                       DateTime @default(now())
+  updated_at                       DateTime @default(now()) @updatedAt
+  planta                           Planta   @relation(fields: [idPlanta], references: [id])
 }
 
 model Soporte {
-  id             Int       @id @default(autoincrement())
-  descripcion    String    // Descripción del problema
-  solucion       String?   // Solución aplicada (opcional)
-  fecha          DateTime  @default(now()) // Fecha del soporte
-  responsable    String    // Persona encargada del soporte
-  estado         String    // Estado del soporte (e.g., "Pendiente", "En Proceso", "Resuelto")
-  habilitado     Boolean   @default(true)  // Indica si el registro está habilitado o inhabilitado
-  
-  idEquipoComputo   Int
-  
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-
-  equipoComputo  EquipoComputo? @relation(fields: [idEquipoComputo], references: [id])
-
+  id              Int           @id @default(autoincrement())
+  descripcion     String
+  solucion        String?
+  fecha           DateTime      @default(now())
+  responsable     String
+  requeridoPor    String        @default("")
+  estado          String
+  habilitado      Boolean       @default(true)
+  idEquipoComputo Int
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  equipoComputo   EquipoComputo @relation(fields: [idEquipoComputo], references: [id])
 }
 
 model File {
-  id        Int      @id @default(autoincrement())
-  fileName  String
-  filePath  String @unique
-  createdAt DateTime @default(now())
-  isProtected Boolean   @default(false)
+  id          Int      @id @default(autoincrement())
+  fileName    String
+  filePath    String   @unique
+  createdAt   DateTime @default(now())
+  isProtected Boolean  @default(false)
 }
-
