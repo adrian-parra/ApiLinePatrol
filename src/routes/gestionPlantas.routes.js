@@ -460,12 +460,10 @@ function convertirAUTC(fechaLocal) {
   return fechaUTC.toISOString();
 }
 
-
 router.get("/gestion/planta/equipoComputo/soporte/dia", async (req, res) => {
-  let { fecha_inicio, fecha_fin } = req.query;
+  let { fecha_inicio, fecha_fin, plantas } = req.query;
 
   try {
-
     // Verificar que se haya proporcionado la fecha de inicio
     if (!fecha_inicio) {
       return res.status(400).json({ error: "Debe proporcionar la fecha de inicio" });
@@ -476,19 +474,42 @@ router.get("/gestion/planta/equipoComputo/soporte/dia", async (req, res) => {
       return res.status(400).json({ error: "Debe proporcionar la fecha de fin" });
     }
 
+    // Convertir plantas a un array de números si se proporcionan
+    const plantasIds = plantas
+      ? plantas.split(',').map(id => Number(id.trim())).filter(id => !isNaN(id))
+      : [];
 
     // Obtener la fecha de inicio y fin
     const fechaInicio = convertirAUTC(fecha_inicio);
     const fechaFin = convertirAUTC(fecha_fin);
 
-    // Consulta para obtener soportes con la fecha actual
-    const soportesHoy = await prisma.soporte.findMany({
-      where: {
-        fecha: {
-          gte: fechaInicio, // Soportes desde el inicio del día
-          lt: fechaFin, // Hasta el final del día
-        },
+    // Construir el objeto de filtrado
+    const whereCondition = {
+      fecha: {
+        gte: fechaInicio, // Soportes desde el inicio del día
+        lt: fechaFin, // Hasta el final del día
       },
+      // Si se proporcionan plantas, filtrar por ellas
+      ...(plantasIds.length > 0 && {
+        equipoComputo: {
+          lineas: {
+            some: {
+              linea: {
+                planta: {
+                  id: {
+                    in: plantasIds
+                  }
+                }
+              }
+            }
+          }
+        }
+      })
+    };
+
+    // Consulta para obtener soportes con la fecha actual y opcionalmente filtrados por plantas
+    const soportesHoy = await prisma.soporte.findMany({
+      where: whereCondition,
       include: {
         equipoComputo: {
           include: {
@@ -525,9 +546,9 @@ router.get("/gestion/planta/equipoComputo/soporte/dia", async (req, res) => {
       .json({ error: "Error al obtener los soportes de hoy" });
   }
 });
+
 router.get("/gestion/planta/equipoComputo/soporte/hoy", async (req, res) => {
   try {
-
     // Obtener la fecha actual
     const fechaActual = new Date();
 
@@ -612,7 +633,6 @@ router.get("/gestion/planta/equipoComputo/soporte/hoy", async (req, res) => {
       .json({ error: "Error al obtener los soportes de hoy" });
   }
 });
-
 
 router.patch('/gestion/planta/equipoComputo/soporte/:id', async (req, res) => {
   const { id } = req.params;
@@ -721,43 +741,46 @@ router.get('/gestion/planta/soportes/estadisticas/estacion', async (req, res) =>
     // Obtener los IDs de los equipos de cómputo
     const equipoIds = soportesPorEquipo.map(s => s.idEquipoComputo);
 
-    // Obtener los equipos de cómputo y sus estaciones
-    const equipos = await prisma.equipoComputo.findMany({
-      where: {
-        id: { in: equipoIds },
-      },
-      include: {
-        lineas: {
-          include: {
-            estacion: true, // Incluir la estación relacionada
+    console.log(equipoIds)
+
+   // Obtener los equipos de cómputo y sus estaciones
+   const equipos = await prisma.equipoComputo.findMany({
+    where: {
+      id: { in: equipoIds },
+    },
+    include: {
+      lineas: {
+        include: {
+          estacion: true, // Incluir la estación relacionada
+        },
           },
         },
-      },
-    });
+  });
 
-    // Contar los soportes por estación
-    const conteoPorEstacion = {};
 
-    soportesPorEquipo.forEach(soporte => {
-      const equipo = equipos.find(e => e.id === soporte.idEquipoComputo);
-      if (equipo && equipo.lineas.length > 0) {
-        const estacion = equipo.lineas[0].estacion.nombre; // Obtener el nombre de la estación
-        if (!conteoPorEstacion[estacion]) {
-          conteoPorEstacion[estacion] = 0;
-        }
-        conteoPorEstacion[estacion] += soporte._count._all; // Sumar el conteo
-      }
-    });
+   // Contar los soportes por estación
+   const conteoPorEstacion = {};
 
-    // Encontrar la estación con más soportes
-    const maxEstacion = Object.entries(conteoPorEstacion).reduce((prev, current) => {
-      return (prev[1] > current[1]) ? prev : current;
-    });
+   soportesPorEquipo.forEach(soporte => {
+     const equipo = equipos.find(e => e.id === soporte.idEquipoComputo);
+     if (equipo && equipo.lineas.length > 0) {
+       const estacion = equipo.lineas[0].estacion.nombre; // Obtener el nombre de la estación
+       if (!conteoPorEstacion[estacion]) {
+         conteoPorEstacion[estacion] = 0;
+       }
+       conteoPorEstacion[estacion] += soporte._count._all; // Sumar el conteo
+     }
+   });
 
-    res.json({
-      estacion: maxEstacion[0],
-      total: maxEstacion[1],
-    });
+   // Encontrar la estación con más soportes
+   const maxEstacion = Object.entries(conteoPorEstacion).reduce((prev, current) => {
+     return (prev[1] > current[1]) ? prev : current;
+   });
+
+   res.json({
+     estacion: maxEstacion[0],
+     total: maxEstacion[1],
+   });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Error al obtener la estación con más soportes: ' + error.message });
