@@ -3,6 +3,8 @@ import { Router } from "express";
 import { exec } from "child_process";
 import { PrismaClient } from "@prisma/client";
 
+import { getLineaEstacionesEquipos } from "../services/gestionPlantasService.js";
+
 const router = Router();
 const prisma = new PrismaClient();
 
@@ -867,5 +869,9 @@ res.json(estacionesOrdenadas);
     res.status(500).json({ error: 'Error al obtener el top 10 de estaciones con más soportes: ' + error.message });
   }
 });
+
+// Add this route in your routes file
+router.get('/linea/:idLinea/estaciones-equipos', getLineaEstacionesEquipos)
+
 
 export default router;

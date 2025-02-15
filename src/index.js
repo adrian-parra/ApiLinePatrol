@@ -1,4 +1,5 @@
 import express from 'express'
+import cors from 'cors';
 
 import linePatrolRoutes  from './routes/linePatrol.routes.js'
 import voseoRoutes from './routes/voseo.routes.js'
@@ -9,8 +10,12 @@ import fileUploadRoutes from './routes/file.routes.js'
 
 
 
+import emailRoutes from './routes/email.routes.js';
+
 
 const app = express()
+
+app.use(cors({origin: '*'}));
 
 
 
@@ -22,6 +27,8 @@ app.use("/api", voseoRoutes)
 app.use("/api", cmdRoutes)
 app.use("/api", reporteGenerador)
 app.use("/api", fileUploadRoutes)
+
+app.use('/api', emailRoutes);
 
 
 app.listen(3000)
