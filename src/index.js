@@ -7,6 +7,9 @@ import cmdRoutes from './routes/cmd.routes.js'
 import gestionPlantasRoutes from './routes/gestionPlantas.routes.js'
 import reporteGenerador from './routes/reporteGenerador.routes.js'
 import fileUploadRoutes from './routes/file.routes.js'
+import geminiRoutes from './routes/gemini.routes.js';
+
+
 
 
 
@@ -29,6 +32,9 @@ app.use("/api", reporteGenerador)
 app.use("/api", fileUploadRoutes)
 
 app.use('/api', emailRoutes);
+
+// Después de otras configuraciones de middleware
+app.use('/api/gemini', geminiRoutes);
 
 
 app.listen(3000)
