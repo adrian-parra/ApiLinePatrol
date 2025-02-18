@@ -4,6 +4,7 @@ import { exec } from "child_process";
 import { PrismaClient } from "@prisma/client";
 
 import { getLineaEstacionesEquipos } from "../services/gestionPlantasService.js";
+import { toAskGeminiSoportes } from "../services/gemini.js";
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -816,7 +817,7 @@ router.get('/gestion/planta/soportes/estadisticas/top-estaciones', async (req, r
     // Obtener los IDs de los equipos de cómputo
     const equipoIds = soportesPorEquipo.map(s => s.idEquipoComputo);
 
-    console.log(equipoIds)
+    // console.log(equipoIds)
 
    // Obtener los equipos de cómputo y sus estaciones y líneas
    const equipos = await prisma.equipoComputo.findMany({
@@ -855,7 +856,15 @@ router.get('/gestion/planta/soportes/estadisticas/top-estaciones', async (req, r
      }
    });
 
-   console.log(conteoPorEstacion)
+   //console.log(conteoPorEstacion)
+
+   // OBTENER ESTADISTICAS CON IA 
+
+   const textCorrected = await toAskGeminiSoportes({ 
+    supportData: conteoPorEstacion, 
+    history: []
+  });
+
 
  // Convertir el objeto a un array y ordenar por total de soportes
 const estacionesOrdenadas = Object.entries(conteoPorEstacion)
@@ -863,7 +872,11 @@ const estacionesOrdenadas = Object.entries(conteoPorEstacion)
 .sort((a, b) => b.total - a.total) // Ordenar de mayor a menor
 .slice(0, 10); // Limitar a las 10 primeras
 
-res.json(estacionesOrdenadas);
+res.json({
+  estacionesOrdenadas: estacionesOrdenadas,
+  analisisIA: textCorrected
+});
+
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Error al obtener el top 10 de estaciones con más soportes: ' + error.message });

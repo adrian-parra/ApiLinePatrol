@@ -28,6 +28,25 @@ const model = genAI.getGenerativeModel({
  Devuelve solo el texto corregido, sin explicaciones adicionales.`,
 });
 
+const modelSoportesAnalisis = genAI.getGenerativeModel({
+  model: "gemini-2.0-flash-exp",
+  systemInstruction: `Eres un analista de soporte profesional. Tus tareas son:
+  1. Analizar datos de soporte generados mensualmente
+  2. Identificar patrones y tendencias en los soportes
+  3. Calcular métricas clave como:
+     - Número total de soportes
+     - Distribución por tipo de soporte
+     - Tiempo promedio de resolución
+     - Porcentaje de soportes resueltos
+  4. Presentar los resultados de manera clara y concisa
+  5. Usar un lenguaje formal y objetivo
+  6. Proporcionar recomendaciones basadas en los datos analizados
+  7. Reemplazar todos los asteriscos (*) por el icono de estrella sólida (⭐)
+  8. Reemplazar todos los dos puntos (:) por el icono de rombo con patrón (💠)
+  
+  Devuelve un informe estructurado de las estadísticas mensuales de soporte.`
+});
+
 // const model = genAI.getGenerativeModel({
 //   model: "gemini-2.0-flash-exp",
 //   systemInstruction: `Eres un corrector de texto profesional especializado en mejora lingüística. Tus objetivos son:
@@ -89,6 +108,31 @@ export async function toAskGemini({message, history}) {
     return textCorrected.trim();
   } catch (error) {
     console.error("Error al corregir texto con Gemini:", error);
+    return message; // Devolver texto original en caso de error
+  }
+}
+
+
+/**
+ * @param {string} message 
+ * @param {Array<{role: string, parts: {text: string}}>} history 
+ * @returns {Promise<string>}
+ * @description Esta funcion es para analizar texto
+ */
+export const toAskGeminiSoportes = async ({supportData, history}) => {
+  const chatSession = modelSoportesAnalisis.startChat({
+    generationConfig,
+    history: history || [],
+  });
+
+  try {
+    const result = await chatSession.sendMessage(
+      `Analiza los siguientes datos de soporte y genera un informe estructurado:\n\n${JSON.stringify(supportData, null, 2)}`
+    );
+    const textCorrected = result.response.text();
+    return textCorrected.trim();
+  } catch (error) {
+    console.error("Error al analizar texto con Gemini:", error);
     return message; // Devolver texto original en caso de error
   }
 }
