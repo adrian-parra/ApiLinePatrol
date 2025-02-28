@@ -8,6 +8,7 @@ import gestionPlantasRoutes from './routes/gestionPlantas.routes.js'
 import reporteGenerador from './routes/reporteGenerador.routes.js'
 import fileUploadRoutes from './routes/file.routes.js'
 import geminiRoutes from './routes/gemini.routes.js';
+import pdfRoutes from './routes/pdf.routes.js';
 
 
 
@@ -30,6 +31,7 @@ app.use("/api", voseoRoutes)
 app.use("/api", cmdRoutes)
 app.use("/api", reporteGenerador)
 app.use("/api", fileUploadRoutes)
+app.use("/api", pdfRoutes)
 
 app.use('/api', emailRoutes);
 
